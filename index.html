@@ -1439,23 +1439,25 @@ function checkResult() {
   const checks = [];
 
   // 0. Potentiometer / Auslösestrom korrekt?
-  const t_chk      = (potiAngle - 135) / 270;
+  // Use ARC_START constant (not hardcoded 135) – keeps in sync with poti logic
+  const t_chk       = (potiAngle - ARC_START) / 270;
   const potiCurrent = POTI_MIN + t_chk * (POTI_MAX - POTI_MIN);
   const potiVal     = potiCurrent.toFixed(2).replace('.', ',');
+  const motorInVal  = MOTOR_IN.toFixed(2).replace('.', ',');
   let   potiOk, potiDesc, potiHint;
   if (potiCurrent < ZONE_LOW_MAX) {
     potiOk   = false;
     potiDesc = `⬇ Ir = ${potiVal} A – zu niedrig! MSS löst bei Nennlast sofort aus`;
-    potiHint = 'Einstellrad nach rechts drehen, Zielwert: 1,0 A';
+    potiHint = `Einstellrad nach rechts drehen, Zielwert: ${motorInVal} A (Class 10)`;
   } else if (potiCurrent <= ZONE_OK_MAX) {
     potiOk   = true;
-    potiDesc = `✓ Ir = ${potiVal} A – korrekt eingestellt (≈ In = 1,0 A)`;
+    potiDesc = `✓ Ir = ${potiVal} A – korrekt eingestellt (Class 10, In = ${motorInVal} A)`;
     potiHint = '';
   } else {
     potiOk   = false;
     const over = Math.round((potiCurrent / MOTOR_IN - 1) * 100);
     potiDesc = `🔥 Ir = ${potiVal} A – ZU HOCH (+${over}%)! Motor ungeschützt – MSS löst NICHT aus, Brandgefahr!`;
-    potiHint = 'Einstellrad zurückdrehen auf 1,0 A – dies ist der gefährlichste Fehlerfall!';
+    potiHint = `Einstellrad zurückdrehen auf ${motorInVal} A – dies ist der gefährlichste Fehlerfall!`;
   }
   checks.push({ desc: potiDesc, ok: potiOk, hint: potiHint });
 
