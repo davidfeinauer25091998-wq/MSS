@@ -640,12 +640,13 @@
   .nameplate-highlight-val { color: #c00; font-weight: 900; font-size: 0.72rem; }
 
   /* ─── POTENTIOMETER ─── */
+  /* ─── POTENTIOMETER ─── */
   .poti-section {
     margin-top: 8px;
     background: rgba(0,30,80,0.25);
     border: 1px solid #3a5080;
     border-radius: 6px;
-    padding: 8px 10px;
+    padding: 8px 10px 10px;
   }
   .poti-label {
     font-size: 0.58rem;
@@ -653,11 +654,12 @@
     text-transform: uppercase;
     letter-spacing: 0.12em;
     text-align: center;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
   }
+  /* knob + readout side by side */
   .poti-wrap {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 10px;
   }
   .poti-knob-svg {
@@ -666,78 +668,137 @@
     user-select: none;
     filter: drop-shadow(0 2px 6px rgba(0,0,0,0.5));
     transition: filter 0.15s;
+    touch-action: none;
   }
-  .poti-knob-svg:active { cursor: grabbing; filter: drop-shadow(0 2px 10px rgba(77,166,255,0.6)); }
+  .poti-knob-svg:active { cursor: grabbing; }
+  /* right-side readout column */
   .poti-readout {
     flex: 1;
+    min-width: 0;
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 5px;
   }
   .poti-current-label {
-    font-size: 0.55rem;
+    font-size: 0.52rem;
     color: var(--muted);
     text-transform: uppercase;
     letter-spacing: 0.1em;
+    margin-bottom: -2px;
   }
   .poti-current-value {
     font-family: 'Share Tech Mono', monospace;
-    font-size: 1.1rem;
+    font-size: 1.2rem;
     font-weight: 700;
-    color: var(--accent);
     line-height: 1;
+    transition: color 0.2s;
   }
-  .poti-range-bar {
-    height: 5px;
-    background: #1a2035;
-    border-radius: 3px;
-    overflow: hidden;
-    border: 1px solid #3a5080;
+  /* ── linear scale bar ── */
+  .poti-scale-wrap {
     position: relative;
+    height: 18px;   /* enough room for bar + ticks */
+    margin-top: 2px;
   }
-  .poti-range-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #4da6ff, #f5a623);
-    border-radius: 3px;
-    transition: width 0.1s;
+  /* static tri-colour background – percentages set by JS on init */
+  .poti-scale-bg {
+    position: absolute;
+    left: 0; top: 4px;
+    width: 100%; height: 10px;
+    border-radius: 5px;
+    opacity: 0.35;
   }
-  .poti-range-labels {
+  /* needle (white line) */
+  .poti-scale-needle {
+    position: absolute;
+    top: 0;
+    width: 2px;
+    height: 18px;
+    background: #fff;
+    border-radius: 1px;
+    transform: translateX(-50%);
+    transition: left 0.06s linear;
+    pointer-events: none;
+    box-shadow: 0 0 4px rgba(255,255,255,0.7);
+  }
+  /* tick marks at zone boundaries */
+  .poti-scale-tick {
+    position: absolute;
+    top: 2px;
+    width: 2px;
+    height: 14px;
+    border-radius: 1px;
+    transform: translateX(-50%);
+    pointer-events: none;
+  }
+  /* min / max labels row */
+  .poti-scale-labels {
     display: flex;
     justify-content: space-between;
+    font-family: 'Share Tech Mono', monospace;
     font-size: 0.5rem;
     color: var(--muted);
-    font-family: 'Share Tech Mono', monospace;
     margin-top: 1px;
   }
-  .poti-status {
-    font-size: 0.55rem;
-    font-weight: 700;
-    margin-top: 2px;
-    padding: 2px 5px;
-    border-radius: 3px;
-    text-align: center;
-  }
-  .poti-status.ok { background: rgba(62,207,106,0.15); color: var(--green); border: 1px solid rgba(62,207,106,0.3); }
-  .poti-status.warn { background: rgba(232,69,69,0.15); color: var(--red); border: 1px solid rgba(232,69,69,0.3); }
-  .poti-tick-scale {
+  /* zone legend row */
+  .poti-zone-legend {
     display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    height: 16px;
-    margin-top: 2px;
-    position: relative;
+    gap: 0;
+    font-size: 0.48rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    border-radius: 3px;
+    overflow: hidden;
   }
-  .poti-tick {
-    width: 1px;
-    background: #3a5080;
-    flex-shrink: 0;
+  .poti-zone-legend span {
+    flex: 1;
+    text-align: center;
+    padding: 2px 0;
+  }
+  .pzl-low  { background: rgba(77,166,255,0.18); color: #7ac8ff; }
+  .pzl-ok   { background: rgba(62,207,106,0.18); color: #3ecf6a; }
+  .pzl-high { background: rgba(232,69,69,0.18);  color: #e84545; }
+  /* status box – auto height, min-height so layout stays stable */
+  .poti-status {
+    font-size: 0.54rem;
+    font-weight: 700;
+    padding: 4px 6px;
+    border-radius: 4px;
+    text-align: center;
+    line-height: 1.35;
+    min-height: 2.9em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    transition: background 0.2s, border-color 0.2s, color 0.2s;
+  }
+  .poti-status.ok {
+    background: rgba(62,207,106,0.12);
+    color: var(--green);
+    border: 2px solid rgba(62,207,106,0.35);
+  }
+  .poti-status.warn-low {
+    background: rgba(77,166,255,0.12);
+    color: #7ac8ff;
+    border: 2px solid rgba(77,166,255,0.35);
+  }
+  .poti-status.warn-high {
+    background: rgba(232,69,69,0.15);
+    color: var(--red);
+    border: 2px solid rgba(232,69,69,0.5);
+    animation: pulseDanger 1.1s ease-in-out infinite;
+  }
+  @keyframes pulseDanger {
+    0%,100% { box-shadow: 0 0 0 0   rgba(232,69,69,0); }
+    50%      { box-shadow: 0 0 0 4px rgba(232,69,69,0.3); }
   }
 </style>
 </head>
 <body>
 
 <h1>⚡ Motorschutzschalter & Motor – Verdrahtung</h1>
-<p class="subtitle">Klicke auf einen Klemmen-Punkt → ziehe zur Zielklemme</p>
+<p class="subtitle" id="main-subtitle">Klicke auf einen Klemmen-Punkt → ziehe zur Zielklemme</p>
 
 <div class="workspace" id="workspace">
   <svg id="canvas"></svg>
@@ -746,9 +807,9 @@
 
     <!-- POWER SUPPLY -->
     <div class="power-supply" id="ps-wrap">
-      <div class="ps-label">Einspeisung 400V / 3L</div>
+      <div class="ps-label">Einspeisung 230V / 3L</div>
       <div class="ps-body">
-        <div class="ps-title">NETZ</div>
+        <div class="ps-title">NETZ 230V</div>
         <div class="ps-terminals" id="ps-terminals">
           <!-- Rendered by JS -->
         </div>
@@ -766,7 +827,7 @@
         <div class="mss-main-area">
           <div class="mss-switch-area">
             <div class="mss-knob" title="Auslöseknopf (EIN/AUS)"></div>
-            <div class="mss-scale">0.7–1.0A<br>3-polig<br>400V</div>
+            <div class="mss-scale">0,5–2,0A<br>3-polig<br>400V</div>
           </div>
           <div class="mss-info">
             <div class="mss-info-row">Ue: 690V</div>
@@ -780,32 +841,66 @@
         <div class="poti-section">
           <div class="poti-label">▸ Einstellrad Auslösestrom (I<sub>r</sub>)</div>
           <div class="poti-wrap">
-            <svg class="poti-knob-svg" id="poti-svg" width="52" height="52" viewBox="0 0 52 52">
-              <!-- Outer ring -->
-              <circle cx="26" cy="26" r="24" fill="#1a2035" stroke="#4a6090" stroke-width="2"/>
-              <!-- Scale arc background -->
-              <path id="poti-arc-bg" d="" fill="none" stroke="#2a3a55" stroke-width="4" stroke-linecap="round"/>
-              <!-- Scale arc fill -->
-              <path id="poti-arc-fill" d="" fill="none" stroke="#f5a623" stroke-width="4" stroke-linecap="round"/>
-              <!-- Knob body -->
-              <circle cx="26" cy="26" r="16" fill="url(#potiGrad)" stroke="#6080b0" stroke-width="1.5"/>
-              <!-- Indicator line (rotated by JS) -->
-              <line id="poti-indicator" x1="26" y1="26" x2="26" y2="13" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
-              <!-- Center dot -->
-              <circle cx="26" cy="26" r="3" fill="#b0c8f0"/>
-              <!-- Min/Max tick marks -->
+
+            <!-- SVG knob: cx=32,cy=32, arc radius=24 -->
+            <svg class="poti-knob-svg" id="poti-svg" width="72" height="72" viewBox="0 0 72 72" style="touch-action:none;">
               <defs>
                 <radialGradient id="potiGrad" cx="38%" cy="35%">
                   <stop offset="0%" stop-color="#5a7ab0"/>
                   <stop offset="100%" stop-color="#1e2e48"/>
                 </radialGradient>
               </defs>
+              <!-- Background ring -->
+              <circle cx="36" cy="36" r="34" fill="#161e2e" stroke="#2e3f5c" stroke-width="1.5"/>
+              <!-- Static zone arcs (always full, dimmed) -->
+              <path id="poti-arc-zone-low"  fill="none" stroke="#4da6ff" stroke-width="6" stroke-linecap="butt" opacity="0.3"/>
+              <path id="poti-arc-zone-ok"   fill="none" stroke="#3ecf6a" stroke-width="6" stroke-linecap="butt" opacity="0.3"/>
+              <path id="poti-arc-zone-high" fill="none" stroke="#e84545" stroke-width="6" stroke-linecap="butt" opacity="0.3"/>
+              <!-- Bright fill arc (follows knob position, same colour as zone) -->
+              <path id="poti-arc-fill" fill="none" stroke-width="6" stroke-linecap="round"/>
+              <!-- Zone-boundary ticks -->
+              <line id="tick-low"  stroke="#4da6ff" stroke-width="2" opacity="0.9"/>
+              <line id="tick-high" stroke="#e84545" stroke-width="2" opacity="0.9"/>
+              <!-- Knob disk -->
+              <circle cx="36" cy="36" r="22" fill="url(#potiGrad)" stroke="#5a78a8" stroke-width="2"/>
+              <!-- Indicator needle -->
+              <line id="poti-indicator" x1="36" y1="36" x2="36" y2="17" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
+              <!-- Centre dot -->
+              <circle cx="36" cy="36" r="3.5" fill="#a8c4e8"/>
             </svg>
+
+            <!-- Readout column -->
             <div class="poti-readout">
               <div class="poti-current-label">Eingestellter I<sub>r</sub></div>
               <div class="poti-current-value" id="poti-val-display">1,0 A</div>
-              <div class="poti-range-bar"><div class="poti-range-fill" id="poti-fill" style="width:100%"></div></div>
-              <div class="poti-range-labels"><span>0,7 A</span><span>1,0 A</span></div>
+
+              <!-- Linear scale bar -->
+              <div class="poti-scale-wrap">
+                <!-- Static tricolour background -->
+                <div class="poti-scale-bg"></div>
+                <!-- Boundary ticks -->
+                <div class="poti-scale-tick" id="scale-tick-low"
+                     style="background:#4da6ff;"></div>
+                <div class="poti-scale-tick" id="scale-tick-high"
+                     style="background:#e84545;"></div>
+                <!-- Live needle -->
+                <div class="poti-scale-needle" id="poti-needle" style="left:35%;"></div>
+              </div>
+
+              <!-- Min / max value labels -->
+              <div class="poti-scale-labels">
+                <span>0,5 A</span>
+                <span>2,0 A</span>
+              </div>
+
+              <!-- Zone legend chips -->
+              <div class="poti-zone-legend">
+                <span class="pzl-low">↓ &lt;0,85 A</span>
+                <span class="pzl-ok">✓ Class 10</span>
+                <span class="pzl-high">⚠ &gt;1,05 A</span>
+              </div>
+
+              <!-- Status message (fixed height) -->
               <div class="poti-status ok" id="poti-status">✓ Korrekt eingestellt</div>
             </div>
           </div>
@@ -825,7 +920,7 @@
       <div class="motor-body">
         <div class="motor-top-strip">
           <span class="motor-brand">ABB</span>
-          <span class="motor-rating">0.37kW / 1.0A</span>
+          <span class="motor-rating">0,37 kW / 1,0 A</span>
         </div>
         <div class="motor-visual">
           <div class="motor-circle">
@@ -843,8 +938,8 @@
           <div class="motor-tb-label">Klemmenkasten</div>
           <div class="motor-terminals-row" id="motor-terminals"></div>
           <div class="motor-connection-type" style="margin-top:8px;">
-            <button class="conn-btn stern active-stern" id="btn-stern" onclick="setConnection('stern')">Stern (Y)</button>
-            <button class="conn-btn dreieck" id="btn-dreieck" onclick="setConnection('dreieck')">Dreieck (Δ)</button>
+            <button class="conn-btn stern active-stern" id="btn-stern" onclick="setConnection('stern')">Stern Y / 230V</button>
+            <button class="conn-btn dreieck" id="btn-dreieck" onclick="setConnection('dreieck')">Dreieck Δ / 400V</button>
           </div>
         </div>
 
@@ -857,7 +952,7 @@
             <div class="nameplate-row"><span class="nameplate-key">IP</span><span class="nameplate-val">55</span></div>
             <div class="nameplate-row"><span class="nameplate-key">Pn</span><span class="nameplate-val">0,37 kW</span></div>
             <div class="nameplate-row"><span class="nameplate-key">cos φ</span><span class="nameplate-val">0,70</span></div>
-            <div class="nameplate-row"><span class="nameplate-key">Ue</span><span class="nameplate-val">400/690 V</span></div>
+            <div class="nameplate-row"><span class="nameplate-key">Ue</span><span class="nameplate-val">230/400 V</span></div>
             <div class="nameplate-row"><span class="nameplate-key">η</span><span class="nameplate-val">64 %</span></div>
             <div class="nameplate-row"><span class="nameplate-key">Schaltung</span><span class="nameplate-val">Y/Δ</span></div>
             <div class="nameplate-row"><span class="nameplate-key">n</span><span class="nameplate-val">1370 /min</span></div>
@@ -865,9 +960,9 @@
             <div class="nameplate-row"><span class="nameplate-key">Kl. F</span><span class="nameplate-val">155°C</span></div>
           </div>
           <div class="nameplate-highlight">
-            <span class="nameplate-highlight-label">In (400V Y):</span>
+            <span class="nameplate-highlight-label">In (230V Y):</span>
             <span class="nameplate-highlight-val" id="nameplate-in">1,0 A</span>
-            <span class="nameplate-highlight-label">In (690V Δ):</span>
+            <span class="nameplate-highlight-label">In (400V Δ):</span>
             <span class="nameplate-highlight-val">0,58 A</span>
           </div>
         </div>
@@ -899,11 +994,11 @@
     </div>
     <div class="info-card">
       <div class="info-card-title">Sternschaltung (Y)</div>
-      <div class="info-card-text">U1, V1, W1 = Spannung<br>U2, V2, W2 = Sternpunkt (verbinden)</div>
+      <div class="info-card-text">Betrieb mit 230V (Strang) → Stern<br>U2, V2, W2 = Sternpunkt verbinden</div>
     </div>
     <div class="info-card">
       <div class="info-card-title">Dreieckschaltung (Δ)</div>
-      <div class="info-card-text">U1-W2, V1-U2, W1-V2 verbinden.<br>Netzanschluss: U1, V1, W1</div>
+      <div class="info-card-text">Betrieb mit 400V (Strang) → Dreieck<br>U1-W2, V1-U2, W1-V2 verbinden</div>
     </div>
     <div class="info-card">
       <div class="info-card-title">Leitungsfarben (VDE)</div>
@@ -961,8 +1056,12 @@ function buildTerminal(id, label) {
   el.id = 'term-' + id;
   el.dataset.termId = id;
   el.title = label;
+  // Mouse (drag-and-drop)
   el.addEventListener('mousedown', onTerminalMousedown);
   el.addEventListener('mouseup', onTerminalMouseup);
+  // Touch (tap-to-select → tap-to-connect)
+  el.addEventListener('touchstart', onTerminalTouchStart, { passive: false });
+  el.addEventListener('touchend',   onTerminalTouchEnd,   { passive: false });
   return el;
 }
 
@@ -1017,10 +1116,13 @@ const motCont = document.getElementById('motor-terminals');
 });
 
 // ───────────────────────────────────────────────────
-//  MOUSE / DRAG LOGIC
+//  POINTER / DRAG / TOUCH LOGIC
 // ───────────────────────────────────────────────────
 const canvas = document.getElementById('canvas');
 const workspace = document.getElementById('workspace');
+
+// Detect whether the primary input is touch (used for subtitle hint)
+const isTouchDevice = () => window.matchMedia('(pointer: coarse)').matches;
 
 function getTerminalCenter(id) {
   const el = document.getElementById('term-' + id);
@@ -1033,18 +1135,13 @@ function getTerminalCenter(id) {
   };
 }
 
-function onTerminalMousedown(e) {
-  e.preventDefault();
-  const id = e.currentTarget.dataset.termId;
-  if (selectedTerminal && selectedTerminal !== id) {
-    // Try to connect
-    finishWire(id);
-    return;
-  }
+// ── Shared: start selection on a terminal ──────────
+function startSelection(id) {
   selectedTerminal = id;
-  e.currentTarget.classList.add('selected');
+  const el = document.getElementById('term-' + id);
+  if (el) el.classList.add('selected');
 
-  // Start drag line
+  // Draw animated drag-preview line from this terminal
   const pos = getTerminalCenter(id);
   dragEl = document.createElementNS('http://www.w3.org/2000/svg','line');
   dragEl.setAttribute('id','drag-line');
@@ -1054,40 +1151,141 @@ function onTerminalMousedown(e) {
   dragEl.setAttribute('y2', pos.y);
   dragEl.setAttribute('stroke', WIRE_COLORS[colorIdx % WIRE_COLORS.length]);
   canvas.appendChild(dragEl);
+}
 
+// ── Shared: update drag line end-point ─────────────
+function moveDragLine(clientX, clientY) {
+  if (!dragEl) return;
+  const wrect = workspace.getBoundingClientRect();
+  dragEl.setAttribute('x2', clientX - wrect.left);
+  dragEl.setAttribute('y2', clientY - wrect.top);
+}
+
+// ── Shared: try to complete wire on a target id ────
+function tryConnect(targetId) {
+  if (!selectedTerminal) return;
+  if (targetId === selectedTerminal) { cancelSelection(); return; }
+  finishWire(targetId);
+}
+
+// ════════════════════════════════════════════════════
+//  MOUSE EVENTS (drag-and-drop)
+// ════════════════════════════════════════════════════
+function onTerminalMousedown(e) {
+  // Ignore if a touch event already handled this
+  if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
+  e.preventDefault();
+  const id = e.currentTarget.dataset.termId;
+  if (selectedTerminal && selectedTerminal !== id) {
+    finishWire(id);
+    return;
+  }
+  startSelection(id);
   document.addEventListener('mousemove', onMouseMove);
   document.addEventListener('mouseup', onMouseUp);
 }
 
 function onMouseMove(e) {
-  if (!dragEl || !selectedTerminal) return;
-  const wrect = workspace.getBoundingClientRect();
-  const x = e.clientX - wrect.left;
-  const y = e.clientY - wrect.top;
-  dragEl.setAttribute('x2', x);
-  dragEl.setAttribute('y2', y);
+  moveDragLine(e.clientX, e.clientY);
 }
 
 function onMouseUp(e) {
-  // Check if released on a terminal
+  document.removeEventListener('mousemove', onMouseMove);
+  document.removeEventListener('mouseup', onMouseUp);
   const el = document.elementFromPoint(e.clientX, e.clientY);
   if (el && el.classList.contains('terminal') && el.dataset.termId !== selectedTerminal) {
     finishWire(el.dataset.termId);
   } else {
     cancelSelection();
   }
-  document.removeEventListener('mousemove', onMouseMove);
-  document.removeEventListener('mouseup', onMouseUp);
 }
 
 function onTerminalMouseup(e) {
   const id = e.currentTarget.dataset.termId;
   if (selectedTerminal && selectedTerminal !== id) {
-    finishWire(id);
     document.removeEventListener('mousemove', onMouseMove);
     document.removeEventListener('mouseup', onMouseUp);
+    finishWire(id);
   }
 }
+
+// ════════════════════════════════════════════════════
+//  TOUCH EVENTS – TAP-TO-SELECT, TAP-TO-CONNECT
+//  (no drag required – just two taps)
+// ════════════════════════════════════════════════════
+let touchMoved = false;       // did finger move significantly?
+let touchStartX = 0;
+let touchStartY = 0;
+
+function onTerminalTouchStart(e) {
+  e.preventDefault();         // prevent scroll & ghost mouse events
+  touchMoved = false;
+  touchStartX = e.touches[0].clientX;
+  touchStartY = e.touches[0].clientY;
+
+  // Live wire preview while finger moves across screen
+  document.addEventListener('touchmove', onTouchMove, { passive: false });
+}
+
+function onTouchMove(e) {
+  e.preventDefault();
+  const t = e.touches[0];
+  const dx = Math.abs(t.clientX - touchStartX);
+  const dy = Math.abs(t.clientY - touchStartY);
+  if (dx > 6 || dy > 6) touchMoved = true;   // finger drifted – not a pure tap
+  moveDragLine(t.clientX, t.clientY);
+}
+
+function onTerminalTouchEnd(e) {
+  e.preventDefault();
+  document.removeEventListener('touchmove', onTouchMove);
+
+  const id = e.currentTarget.dataset.termId;
+
+  // ── Finger lifted over the SAME terminal it started on ──
+  if (!touchMoved) {
+    // Pure tap
+    if (!selectedTerminal) {
+      // First tap → select this terminal
+      startSelection(id);
+    } else if (selectedTerminal === id) {
+      // Tapped same terminal again → deselect
+      cancelSelection();
+    } else {
+      // Second tap on a different terminal → connect
+      finishWire(id);
+    }
+    return;
+  }
+
+  // ── Finger was dragged – check where it was released ──
+  const touch = e.changedTouches[0];
+  const el = document.elementFromPoint(touch.clientX, touch.clientY);
+  if (el && el.classList.contains('terminal') && el.dataset.termId !== selectedTerminal) {
+    finishWire(el.dataset.termId);
+  } else {
+    // Dragged but not onto a valid terminal: keep selection so user can tap destination
+    // (only remove the preview line, keep highlighted source)
+    if (dragEl) { canvas.removeChild(dragEl); dragEl = null; }
+    // Recreate static dot on source so it stays visually selected
+    if (selectedTerminal) {
+      const pos = getTerminalCenter(selectedTerminal);
+      dragEl = document.createElementNS('http://www.w3.org/2000/svg','line');
+      dragEl.setAttribute('id','drag-line');
+      dragEl.setAttribute('x1', pos.x); dragEl.setAttribute('y1', pos.y);
+      dragEl.setAttribute('x2', pos.x); dragEl.setAttribute('y2', pos.y);
+      dragEl.setAttribute('stroke', WIRE_COLORS[colorIdx % WIRE_COLORS.length]);
+      canvas.appendChild(dragEl);
+    }
+  }
+}
+
+// Allow tapping anywhere outside terminals to cancel selection (touch)
+document.addEventListener('touchstart', (e) => {
+  if (!selectedTerminal) return;
+  const el = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY);
+  if (!el || !el.classList.contains('terminal')) cancelSelection();
+}, { passive: true });
 
 function cancelSelection() {
   if (selectedTerminal) {
@@ -1241,15 +1439,25 @@ function checkResult() {
   const checks = [];
 
   // 0. Potentiometer / Auslösestrom korrekt?
-  const t = (potiAngle - 135) / 270;
-  const potiCurrent = POTI_MIN + t * (POTI_MAX - POTI_MIN);
-  const potiOk = Math.abs(potiCurrent - MOTOR_IN) <= 0.05;
-  const potiVal = potiCurrent.toFixed(2).replace('.', ',');
-  checks.push({
-    desc: `MSS Einstellstrom (Ir = ${potiVal} A) ≈ Motorbemessungsstrom (In = 1,0 A)`,
-    ok: potiOk,
-    hint: potiOk ? '' : 'Einstellrad auf Motorstrom 1,0 A drehen!'
-  });
+  const t_chk      = (potiAngle - 135) / 270;
+  const potiCurrent = POTI_MIN + t_chk * (POTI_MAX - POTI_MIN);
+  const potiVal     = potiCurrent.toFixed(2).replace('.', ',');
+  let   potiOk, potiDesc, potiHint;
+  if (potiCurrent < ZONE_LOW_MAX) {
+    potiOk   = false;
+    potiDesc = `⬇ Ir = ${potiVal} A – zu niedrig! MSS löst bei Nennlast sofort aus`;
+    potiHint = 'Einstellrad nach rechts drehen, Zielwert: 1,0 A';
+  } else if (potiCurrent <= ZONE_OK_MAX) {
+    potiOk   = true;
+    potiDesc = `✓ Ir = ${potiVal} A – korrekt eingestellt (≈ In = 1,0 A)`;
+    potiHint = '';
+  } else {
+    potiOk   = false;
+    const over = Math.round((potiCurrent / MOTOR_IN - 1) * 100);
+    potiDesc = `🔥 Ir = ${potiVal} A – ZU HOCH (+${over}%)! Motor ungeschützt – MSS löst NICHT aus, Brandgefahr!`;
+    potiHint = 'Einstellrad zurückdrehen auf 1,0 A – dies ist der gefährlichste Fehlerfall!';
+  }
+  checks.push({ desc: potiDesc, ok: potiOk, hint: potiHint });
 
   // 1. Netz → MSS Eingang
   checks.push({ desc:'L1 → Klemme 1 (MSS Eingang)', ok: connected('ps-L1','mss-1') });
@@ -1339,74 +1547,195 @@ setTimeout(syncCanvasSize, 100);
 // Init
 renderWireList();
 
+// Adapt subtitle and terminal size for touch devices
+if (isTouchDevice()) {
+  const sub = document.getElementById('main-subtitle');
+  if (sub) sub.textContent = '1. Klemme antippen → 2. Zielklemme antippen – Leitung wird gesetzt';
+  // Make terminals bigger on touch for easier tapping
+  document.querySelectorAll('.terminal').forEach(t => {
+    t.style.width  = '26px';
+    t.style.height = '26px';
+  });
+}
+
 // ───────────────────────────────────────────────────
 //  POTENTIOMETER LOGIC
 // ───────────────────────────────────────────────────
-const POTI_MIN = 0.7;
-const POTI_MAX = 1.0;
-const MOTOR_IN = 1.0; // Bemessungsstrom laut Typenschild
-let potiAngle = 220; // degrees, maps 135° (min) to 405° (max)
-let potiDragging = false;
-let potiLastY = 0;
-let potiLastX = 0;
+// ── Poti-Konstanten – Auslöseklasse CLASS 10 (IEC 60947-4-1) ────────────────
+// CLASS 10: Auslösung bei ≥1,2×In in ≤10 s; empfohlener Einstellbereich ±5%
+const POTI_MIN       = 0.5;
+const POTI_MAX       = 2.0;
+const MOTOR_IN       = 1.0;
+const ZONE_LOW_MAX   = 0.85;   // < 0.85 A  → zu niedrig (< 85% In)
+const ZONE_OK_MAX    = 1.05;   // 0.85–1.05 → korrekt (Class 10: auf In einstellen, ≤+5% toleriert)
+                               // > 1.05 A  → zu hoch: Motorschutz kann bei Überlast nicht sicher auslösen
 
-// Arc helpers
+// SVG knob geometry  ← all arcs use CX=36, CY=36, R=24
+const CX = 36, CY = 36, R = 24;
+
+// ── Init linear scale bar from constants ─────────────────────────────────────
+// pct(v) = position on the 0–100% bar for ampere value v
+function scalePct(v) {
+  return Math.max(0, Math.min(100, (v - POTI_MIN) / (POTI_MAX - POTI_MIN) * 100));
+}
+const pLow  = scalePct(ZONE_LOW_MAX).toFixed(2);  // e.g. 23.33% for 0.85A
+const pHigh = scalePct(ZONE_OK_MAX).toFixed(2);   // e.g. 36.67% for 1.05A
+
+// Set gradient background
+const scaleBg = document.querySelector('.poti-scale-bg');
+if (scaleBg) {
+  scaleBg.style.background = `linear-gradient(90deg,
+    #4da6ff 0%, #4da6ff ${pLow}%,
+    #3ecf6a ${pLow}%, #3ecf6a ${pHigh}%,
+    #e84545 ${pHigh}%, #e84545 100%)`;
+}
+// Set boundary tick positions
+const tickLowEl  = document.getElementById('scale-tick-low');
+const tickHighEl = document.getElementById('scale-tick-high');
+if (tickLowEl)  tickLowEl.style.left  = pLow  + '%';
+if (tickHighEl) tickHighEl.style.left = pHigh + '%';
+
+// Set initial needle position
+const initPct = scalePct(MOTOR_IN);
+const needleEl = document.getElementById('poti-needle');
+if (needleEl) needleEl.style.left = initPct + '%';
+// ARC angles in polarToXY convention (0=top, CW):
+// Visual bottom-left = 225°, sweeps 270° CW to visual bottom-right = 495°
+const ARC_START = 225;
+const ARC_END   = 495;
+
+let potiAngle    = ARC_START + ((MOTOR_IN - POTI_MIN) / (POTI_MAX - POTI_MIN)) * 270;
+let potiDragging = false;
+let potiLastY    = 0;
+let potiLastX    = 0;
+
+// ── Geometry helpers ─────────────────────────────────────────────────────────
 function polarToXY(cx, cy, r, angleDeg) {
   const rad = (angleDeg - 90) * Math.PI / 180;
   return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
 }
 function arcPath(cx, cy, r, startDeg, endDeg) {
-  const s = polarToXY(cx, cy, r, startDeg);
-  const e = polarToXY(cx, cy, r, endDeg);
-  const large = (endDeg - startDeg) > 180 ? 1 : 0;
-  return `M ${s.x} ${s.y} A ${r} ${r} 0 ${large} 1 ${e.x} ${e.y}`;
+  const delta = endDeg - startDeg;
+  if (Math.abs(delta) < 0.1) return '';
+  // For a full (or near-full) circle, SVG arc degenerates — split into two halves
+  if (Math.abs(delta) >= 359.9) {
+    const mid = startDeg + delta / 2;
+    const s = polarToXY(cx, cy, r, startDeg);
+    const m = polarToXY(cx, cy, r, mid);
+    const e = polarToXY(cx, cy, r, endDeg);
+    return `M ${s.x.toFixed(2)} ${s.y.toFixed(2)} A ${r} ${r} 0 1 1 ${m.x.toFixed(2)} ${m.y.toFixed(2)} A ${r} ${r} 0 1 1 ${e.x.toFixed(2)} ${e.y.toFixed(2)}`;
+  }
+  const s     = polarToXY(cx, cy, r, startDeg);
+  const e     = polarToXY(cx, cy, r, endDeg);
+  const large = delta > 180 ? 1 : 0;
+  return `M ${s.x.toFixed(2)} ${s.y.toFixed(2)} A ${r} ${r} 0 ${large} 1 ${e.x.toFixed(2)} ${e.y.toFixed(2)}`;
+}
+// Convert an ampere value to the corresponding knob angle
+function currentToAngle(a) {
+  return ARC_START + ((a - POTI_MIN) / (POTI_MAX - POTI_MIN)) * 270;
+}
+// Convert an ampere value to a 0-100 % position on the linear scale bar
+function currentToPct(a) {
+  return Math.max(0, Math.min(100, (a - POTI_MIN) / (POTI_MAX - POTI_MIN) * 100));
 }
 
+// ── Tick helper (short radial line at a given angle on the knob ring) ────────
+function setTick(el, angleDeg, r_inner, r_outer) {
+  if (!el) return;
+  const p1 = polarToXY(CX, CY, r_inner, angleDeg);
+  const p2 = polarToXY(CX, CY, r_outer, angleDeg);
+  el.setAttribute('x1', p1.x.toFixed(2)); el.setAttribute('y1', p1.y.toFixed(2));
+  el.setAttribute('x2', p2.x.toFixed(2)); el.setAttribute('y2', p2.y.toFixed(2));
+}
+
+// ── Main update ──────────────────────────────────────────────────────────────
 function updatePoti(angle) {
-  // Clamp 135..405
-  angle = Math.max(135, Math.min(405, angle));
+  angle     = Math.max(ARC_START, Math.min(ARC_END, angle));
   potiAngle = angle;
-  const t = (angle - 135) / 270; // 0..1
+  const t       = (angle - ARC_START) / 270;              // 0 … 1
   const current = POTI_MIN + t * (POTI_MAX - POTI_MIN);
 
-  // Update SVG
-  const indicator = document.getElementById('poti-indicator');
-  const arcBg = document.getElementById('poti-arc-bg');
+  // ── Determine zone ───────────────────────────────────────────────────────
+  let zone, arcColor, statusText, statusClass;
+  if (current < ZONE_LOW_MAX) {
+    zone        = 'low';
+    arcColor    = '#4da6ff';
+    statusText  = `\u2B07 Zu niedrig \u2013 MSS l\u00f6st bei Nennlast sofort aus!`;
+    statusClass = 'poti-status warn-low';
+  } else if (current <= ZONE_OK_MAX) {
+    zone        = 'ok';
+    arcColor    = '#3ecf6a';
+    statusText  = `\u2713 Korrekt (Class 10) \u2013 optimaler Motorschutz`;
+    statusClass = 'poti-status ok';
+  } else {
+    zone        = 'high';
+    arcColor    = '#e84545';
+    const over  = Math.round((current / MOTOR_IN - 1) * 100);
+    statusText  = `\uD83D\uDD25 ZU HOCH +${over}% \u2013 Class 10 Ausl\u00f6sung gef\u00e4hrdet!`;
+    statusClass = 'poti-status warn-high';
+  }
+
+  // ── Knob arc geometry ────────────────────────────────────────────────────
+  const aLowMax  = currentToAngle(ZONE_LOW_MAX);   // angle at 0.85 A
+  const aOkMax   = currentToAngle(ZONE_OK_MAX);    // angle at 1.10 A
+  const aFill    = angle;                           // current pointer angle
+
+  // Static zone background arcs (always drawn, dimmed)
+  const zLow  = document.getElementById('poti-arc-zone-low');
+  const zOk   = document.getElementById('poti-arc-zone-ok');
+  const zHigh = document.getElementById('poti-arc-zone-high');
+  if (zLow)  zLow .setAttribute('d', arcPath(CX, CY, R, ARC_START, aLowMax));
+  if (zOk)   zOk  .setAttribute('d', arcPath(CX, CY, R, aLowMax,   aOkMax));
+  if (zHigh) zHigh.setAttribute('d', arcPath(CX, CY, R, aOkMax,    ARC_END));
+
+  // Bright fill arc from start to current position
   const arcFill = document.getElementById('poti-arc-fill');
+  if (arcFill) {
+    arcFill.setAttribute('d',      t > 0.001 ? arcPath(CX, CY, R, ARC_START, aFill) : '');
+    arcFill.setAttribute('stroke', arcColor);
+  }
+
+  // Indicator needle — rotates around knob centre
+  const indicator = document.getElementById('poti-indicator');
   if (indicator) {
-    // rotate indicator line around center (26,26)
-    indicator.setAttribute('transform', `rotate(${angle - 180}, 26, 26)`);
+    // rotate the SVG line so its tip points to the current angle
+    // The line is drawn pointing "up" (to y=17 from y=36), so
+    // a rotation of (angle - ARC_START - (270/2)) maps it correctly:
+    // at angle=135 → rotate  0° (pointing to 135° = bottom-left = min)
+    // We derive offset: ARC_START - 90 = 45; so rotate by (angle - 90 + (90-ARC_START)) = angle - ARC_START + 0
+    // Simpler: needle drawn at 0° (top), needs to be at (angle-90) on the unit circle
+    //   SVG top = 270° in trig, we want the line tip at SVG-angle.
+    // polarToXY already maps angleDeg such that 0°→top, 90°→right.
+    // The line x1=36,y1=36→x2=36,y2=17 points to SVG top (= angleDeg=0).
+    // We want tip at angleDeg = angle, so rotate by (angle) degrees.
+    // But SVG rotate(a,cx,cy) rotates CCW in standard SVG (CW visually).
+    // polarToXY uses (angleDeg-90)*π/180 which goes CW from top, matching SVG CW rotation.
+    // So: rotate(angle, 36, 36) places needle tip at the correct arc position.
+    indicator.setAttribute('transform', `rotate(${angle}, ${CX}, ${CY})`);
   }
-  if (arcBg) arcBg.setAttribute('d', arcPath(26, 26, 20, 135, 405));
-  if (arcFill && t > 0) arcFill.setAttribute('d', arcPath(26, 26, 20, 135, 135 + t * 270));
-  else if (arcFill) arcFill.setAttribute('d', '');
 
-  // Update display
-  const val = current.toFixed(2).replace('.', ',');
+  // Boundary ticks on the knob ring
+  setTick(document.getElementById('tick-low'),  aLowMax, R-2, R+3);
+  setTick(document.getElementById('tick-high'), aOkMax,  R-2, R+3);
+
+  // ── Readout ──────────────────────────────────────────────────────────────
+  const val     = current.toFixed(2).replace('.', ',');
+  const pct     = t * 100;
+
   const display = document.getElementById('poti-val-display');
-  const fill = document.getElementById('poti-fill');
-  const status = document.getElementById('poti-status');
-  const ieRow = document.getElementById('mss-ie-row');
-  if (display) display.textContent = val + ' A';
-  if (fill) fill.style.width = (t * 100) + '%';
-  if (ieRow) ieRow.textContent = 'Ir: ' + val + ' A';
+  const needle  = document.getElementById('poti-needle');
+  const status  = document.getElementById('poti-status');
+  const ieRow   = document.getElementById('mss-ie-row');
 
-  // Status: correct if within ±5% of motor nameplate current
-  const diff = Math.abs(current - MOTOR_IN);
-  const isOk = diff <= 0.05;
-  if (status) {
-    if (isOk) {
-      status.textContent = '✓ Korrekt eingestellt';
-      status.className = 'poti-status ok';
-    } else if (current < MOTOR_IN) {
-      status.textContent = '⚠ Zu niedrig – Auslösung!';
-      status.className = 'poti-status warn';
-    } else {
-      status.textContent = '⚠ Zu hoch – kein Schutz!';
-      status.className = 'poti-status warn';
-    }
+  if (display) {
+    display.textContent = val + ' A';
+    display.style.color = arcColor;
   }
-  return { current, isOk };
+  if (needle)  needle.style.left  = scalePct(current) + '%';
+  if (status)  { status.textContent = statusText; status.className = statusClass; }
+  if (ieRow)   ieRow.textContent = 'Ir: ' + val + ' A';
+
+  return { current, zone };
 }
 
 // Mouse drag on poti SVG
